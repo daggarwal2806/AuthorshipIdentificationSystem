@@ -336,3 +336,5 @@ def get_score(signature1: List[float], signature2: List[float], weights: List[fl
 if __name__ == "__main__":
     # Call the main function with the directory of known authors
     make_guess('known_authors')
+
+    # Vishal Testing
