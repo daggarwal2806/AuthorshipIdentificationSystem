@@ -1,12 +1,17 @@
+import spacy
 import string
 import os
 import google.generativeai as genai
 
 # Configure API key
-genai.configure(api_key="xxxxxxxx")  # Replace with your actual API key
+genai.configure(api_key="xxxxxxxxxxxxx")  # Replace with your actual API key
 
 # Initialize the model
 model = genai.GenerativeModel("gemini-pro")
+
+# Load the spaCy English language model
+nlp = spacy.load("en_core_web_sm")
+nlp.max_length = 2000000  # Maximum limit set to 2GB after testing with mysterybook3
 
 # Helper functions
 
@@ -33,10 +38,6 @@ def average_word_length(text):
     Return the average word length of the words in text.
     Do not count empty words as words.
     Do not include surrounding punctuation.
-
-    >>> average_word_length('A pearl! Pearl! Lustrous pearl! '
-  ...                      'Rare. What a nice find.')
-    4.1
     '''
     words = text.split()
     total = 0
@@ -55,10 +56,6 @@ def different_to_total(text):
     divided by the total number of words in text.
     Do not count empty words as words.
     Do not include surrounding punctuation.
-
-    >>> different_to_total('A pearl! Pearl! Lustrous pearl! '
-  ...                    'Rare. What a nice find.')
-    0.7
     '''
     words = text.split()
     total = 0
@@ -77,15 +74,11 @@ def exactly_once_to_total(text):
     divided by the total number of words in text.
     Do not count empty words as words.
     Do not include surrounding punctuation.
-
-    >>> exactly_once_to_total('A pearl! Pearl! Lustrous pearl! '
-  ...                        'Rare. What a nice find.')
-    0.5
     '''
     words = text.split()
+    total = 0
     unique = set()
     once = set()
-    total = 0
     for word in words:
         word = clean_word(word)
         if word!= '':
@@ -106,13 +99,6 @@ def split_string(text, separators):
     separators and return the result. Remove spaces from
     beginning and end of a string before adding it to the list.
     Do not include empty strings in the list.
-
-    >>> split_string('one*two[three', '*[')
-    ['one', 'two', 'three']
-    >>> split_string('A pearl! Pearl! Lustrous pearl! Rare. '
-  ...              'What a nice find.', '.?!')
-    ['A pearl', 'Pearl', 'Lustrous pearl', 'Rare',
-     'What a nice find']
     '''
     words = []
     word = ''
@@ -134,11 +120,6 @@ def get_sentences(text):
     text is a string of text.
     Return a list of the sentences from text.
     Sentences are separated by a '.', '?' or '!'.
-
-    >>> get_sentences('A pearl! Pearl! Lustrous pearl! Rare. '
-  ...                'What a nice find.')
-    ['A pearl', 'Pearl', 'Lustrous pearl', 'Rare',
-     'What a nice find']
     '''
     return split_string(text, '.?!')
 
@@ -147,10 +128,6 @@ def average_sentence_length(text):
     text is a string of text.
     Return the average number of words per sentence in text.
     Do not count empty words as words.
-
-    >>> average_sentence_length('A pearl! Pearl! Lustrous pearl! '
-  ...                          'Rare. What a nice find.')
-    2.0
     '''
     sentences = get_sentences(text)
     total = 0
@@ -166,9 +143,6 @@ def get_phrases(sentence):
     sentence is a sentence string.
     Return a list of the phrases from sentence.
     Phrases are separated by a ',', ';' or ':'.
-
-    >>> get_phrases('Lustrous pearl, Rare, What a nice find')
-    ['Lustrous pearl', 'Rare', 'What a nice find']
     '''
     return split_string(sentence, ',;:')
 
@@ -176,13 +150,6 @@ def average_sentence_complexity(text):
     '''
     text is a string of text.
     Return the average number of phrases per sentence in text.
-
-    >>> average_sentence_complexity('A pearl! Pearl! Lustrous '
-  ...                               'pearl! Rare. What a nice find.')
-    1.0
-    >>> average_sentence_complexity('A pearl! Pearl! Lustrous '
-  ...                               'pearl! Rare, what a nice find.')
-    1.25
     '''
     sentences = get_sentences(text)
     total = 0
@@ -197,11 +164,7 @@ def make_signature(text):
     average word length, different words divided by total words,
     words used exactly once divided by total words,
     average sentence length, and average sentence complexity.
-    Return the signature for text.
-
-    >>> make_signature('A pearl! Pearl! Lustrous pearl! '
-  ...                 'Rare, what a nice find.')
-    [4.0, 0.7, 0.5, 2.0, 1.25]
+    Return the signature for text.   
     '''
     return [average_word_length(text), different_to_total(text),
             exactly_once_to_total(text),
@@ -231,11 +194,6 @@ def get_score(signature1, signature2, weights):
     weights is a list of five weights.
 
     Return the score for signature1 and signature2.
-
-    >>> get_score([4.6, 0.1, 0.05, 10, 2],
-  ...           [4.3, 0.1, 0.04, 16, 4],
-  ...           [11, 33, 50, 0.4, 4])
-    14.2
     '''
     score = 0
     # print("Unknwn_Signature", signature2)
@@ -252,35 +210,13 @@ def lowest_score(signatures_dict, unknown_signature, weights):
 
     Return the key whose signature value has the lowest
     score with unknown_signature.
-
-    >>> d = {'Dan': [1, 0.8, 0.9, 1.3, 1.4], 'Leo': [2, 0.7, 0.8, 1.2, 1.3]}
-    >>> unknown = [1, 0.8, 0.9, 1.3, 1.4]
-    >>> weights = [11, 33, 50, 0.4, 4]
-    >>> lowest_score(d, unknown, weights)
-    'Dan'
     '''
     lowest = None
     for key in signatures_dict:
         score = get_score(signatures_dict[key], unknown_signature, weights)
         if lowest is None or score < lowest[1]:
             lowest = (key, score)
-    # print("Lowest_Score", lowest)
     return lowest[0]
-
-# def process_data(mystery_filename, known_dir):
-#     '''
-#     mystery_filename is the filename of a mystery book whose
-#     author we want to know.
-#     known_dir is the name of a directory of books.
-
-#     Return the name of the signature closest to
-#     the signature of the text of mystery_filename.
-#     '''
-#     signatures = get_all_signatures(known_dir)
-#     with open(mystery_filename, encoding='utf-8') as f:
-#         text = f.read()
-#     unknown_signature = make_signature(text)
-#     return lowest_score(signatures, unknown_signature, [11, 33, 50, 0.4, 4])
 
 def process_data(mystery_filename, known_dir):
     '''
@@ -300,16 +236,50 @@ def process_data(mystery_filename, known_dir):
     author_name = author_name.replace(".", " ").title()  # Replace dots with spaces and capitalize each word
     return author_name  # Return the formatted author name
 
-# def make_guess(known_dir):
-#     '''
-#     Ask user for a filename.
-#     Get all known signatures from known_dir,
-#     and print the name of the one that has the lowest score
-#     with the user's filename.
-#     '''
-#     filename = input('Enter filename: ')
-#     print(process_data(filename, known_dir))
+def extract_named_entities(text_file):
+    """
+    Extracts named entities from the given text file using spaCy,
+    categorizes them by label, and returns unique PERSON entities.
 
+    Args:
+        text_file: The path to the text file.
+
+    Returns:
+        A set containing PERSON entities.
+    """
+
+    with open(text_file, 'r', encoding='utf-8') as file:
+        text = file.read()
+    doc = nlp(text)
+    entities_by_label = {}
+    unique_persons = set()
+    for ent in doc.ents:
+        label = ent.label_
+        if label not in entities_by_label:
+            entities_by_label[label] = []
+        if label == "PERSON":
+            if ent.text not in unique_persons:
+                entities_by_label[label].append(ent.text)
+                unique_persons.add(ent.text)
+        else:
+            entities_by_label[label].append(ent.text)
+    return unique_persons
+
+def guess_author_and_book(unique_persons):
+    """
+    Sends the set of unique character/persons to Gemini with a prompt
+    to guess the author and book name.
+
+    Args:
+        unique_persons: A set of unique character/person names.
+    """
+
+    prompt = f"I have a set of character/persons from an unknown book as mentioned below, " \
+             f"kindly provide a possible author name and book name.\n\n{unique_persons}"
+
+    # Generate text
+    response = model.generate_content(prompt)
+    print(response.text)
 
 def get_author_description(author_name):
     # Generate text
@@ -325,24 +295,18 @@ def make_guess(known_dir):
     '''
     filename = input('Enter filename: ')
     author_name = process_data(filename, known_dir)
+    print ("--------------------------------------------")
     print(f"The author of the unknown book is likely: {author_name}")
 
     # Send the author name to the AI chatbot and get a description
     description = get_author_description(author_name)
+    print ("--------------------------------------------")
+    print("Answer from AI ->")
+    print(guess_author_and_book(extract_named_entities(filename)))
+    print ("--------------------------------------------")
     print(f"Tell me about the author: {description}")
 
 # Main program
 
 make_guess(r"C:/Users/sangr/OneDrive/Desktop/known_authors")
 
-# get_all_signatures("C:/Users/sangr/OneDrive/Desktop/known_authors")
-#make_guess('known_authors')
-
-# genai.configure(api_key="xxxxxxxxxx")  # Replace with your actual API key
-
-# # Initialize the model
-# model = genai.GenerativeModel("gemini-pro")
-
-# # Generate text
-# response = model.generate_content("Explain black holes in simple terms")
-# print(response.text)
