@@ -1,3 +1,10 @@
+'''
+To run the given Python code on your machine, you'll need to have the following prerequisites installed:
+1. Python: The code is written in Python, so you'll need to have Python installed on your system. You can download the latest version of Python from the official website python.org.   
+2. google.generativeai: This package provides access to the Gemini API. You can install it using pip install google-generativeai.
+3. spaCy: This library is used for Natural Language Processing tasks like Named Entity Recognition. You can install it using pip install spacy.
+4. spaCy Language Model: You'll need to download the English language model for spaCy. You can do this by running the command python -m spacy download en_core_web_sm.
+'''
 import spacy
 import string
 import os
