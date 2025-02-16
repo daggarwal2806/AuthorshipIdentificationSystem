@@ -361,6 +361,56 @@ def make_guess(known_dir: str) -> None:
     filename = input('Enter filename: ')
     print(process_data(filename, known_dir))
 
+def apply_pca(signatures: Dict[str, List[float]], n_components: int = 2) -> Dict[str, List[float]]:
+        """
+        Apply PCA to reduce the dimensionality of the signatures.
+        
+        Args:
+            signatures (Dict[str, List[float]]): Dictionary of known signatures.
+            n_components (int): Number of principal components to keep.
+        
+        Returns:
+            Dict[str, List[float]]: Dictionary of reduced signatures.
+        """
+        pca = PCA(n_components=n_components)
+        keys = list(signatures.keys())
+        values = list(signatures.values())
+        reduced_values = pca.fit_transform(values)
+        reduced_signatures = {keys[i]: reduced_values[i].tolist() for i in range(len(keys))}
+        return reduced_signatures
+
+    def process_data_with_pca(mystery_filename: str, known_dir: str, n_components: int = 2) -> str:
+        """
+        Takes in mystery book filename and name of a directory of known-author books as parameters.
+        Returns the name of the closest known signature after applying PCA.
+        
+        Args:
+            mystery_filename (str): Filename of the mystery book.
+            known_dir (str): Directory containing known author books.
+            n_components (int): Number of principal components to keep.
+        
+        Returns:
+            str: Name of the closest known signature.
+        """
+        signatures = get_all_signatures(known_dir)
+        reduced_signatures = apply_pca(signatures, n_components)
+        with open(mystery_filename, encoding='utf-8') as file:
+            text = file.read()
+            unknown_signature = make_signature(text)
+            unknown_signature_reduced = PCA(n_components=n_components).fit_transform([unknown_signature])[0]
+        return lowest_score(reduced_signatures, unknown_signature_reduced, [1] * n_components)
+
+    def make_guess_with_pca(known_dir: str, n_components: int = 2) -> None:
+        """
+        Top-level function to make a guess about the authorship of a mystery text file using PCA.
+        
+        Args:
+            known_dir (str): Directory containing known author books.
+            n_components (int): Number of principal components to keep.
+        """
+        filename = input('Enter filename: ')
+        print(process_data_with_pca(filename, known_dir, n_components))
+
 if __name__ == "__main__":
     # Call the main function with the directory of known authors
     make_guess('known_authors')
