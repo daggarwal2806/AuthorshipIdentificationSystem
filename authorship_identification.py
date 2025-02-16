@@ -332,6 +332,24 @@ def get_score(signature1: List[float], signature2: List[float], weights: List[fl
     for i in range(len(signature1)):
         score += abs(signature1[i] - signature2[i]) * weights[i]
     return score
+    
+def process_data(mystery_filename: str, known_dir: str) -> str:
+    """
+    Takes in mystery book filename and name of a directory of known-author books as parameters.
+    Returns the name of the closest known signature.
+    
+    Args:
+        mystery_filename (str): Filename of the mystery book.
+        known_dir (str): Directory containing known author books.
+    
+    Returns:
+        str: Name of the closest known signature.
+    """
+    signatures = get_all_signatures(known_dir)
+    with open(mystery_filename, encoding='utf-8') as file:
+        text = file.read()
+        unknown_signature = make_signature(text)
+    return lowest_score(signatures, unknown_signature, [11, 33, 50, 0.4, 4])
 
 if __name__ == "__main__":
     # Call the main function with the directory of known authors
