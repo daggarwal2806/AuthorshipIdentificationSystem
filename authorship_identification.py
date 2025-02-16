@@ -351,6 +351,16 @@ def process_data(mystery_filename: str, known_dir: str) -> str:
         unknown_signature = make_signature(text)
     return lowest_score(signatures, unknown_signature, [11, 33, 50, 0.4, 4])
 
+def make_guess(known_dir: str) -> None:
+    """
+    Top-level function to make a guess about the authorship of a mystery text file.
+    
+    Args:
+        known_dir (str): Directory containing known author books.
+    """
+    filename = input('Enter filename: ')
+    print(process_data(filename, known_dir))
+
 if __name__ == "__main__":
     # Call the main function with the directory of known authors
     make_guess('known_authors')
