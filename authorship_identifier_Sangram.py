@@ -4,15 +4,50 @@ To run the given Python code on your machine, you'll need to have the following 
 2. google.generativeai: This package provides access to the Gemini API. You can install it using pip install google-generativeai.
 3. spaCy: This library is used for Natural Language Processing tasks like Named Entity Recognition. You can install it using pip install spacy.
 4. spaCy Language Model: You'll need to download the English language model for spaCy. You can do this by running the command python -m spacy download en_core_web_sm.
+5. pandas: This library is used for data manipulation and analysis. You can install it using pip install pandas.
+6. requests: This library is used for making HTTP requests. You can install it using pip install requests.
+7. numpy: This library is used for numerical operations. You can install it using pip install numpy.
+8. BeautifulSoup: This library is used for web scraping. You can install it using pip install beautifulsoup4.
+9. scikit-learn: This library is used for machine learning tasks. You can install it using pip install scikit-learn.
+10. torch: This library is used for deep learning tasks. You can install it using pip install torch.
+11. transformers: This library is used for natural language processing tasks. You can install it using pip install transformers.
+12. tqdm: This library is used for progress bars. You can install it using pip install tqdm.
+13. shutil: This library is used for file operations. It is included in the Python standard library.
+14. google.colab: This library is used for Google Colab operations. You can install it using pip install google-colab.
+15. concurrent.futures: This library is used for parallel processing. It is included in the Python standard library.
 '''
 import logging
 import spacy
 import string
 import os
 import google.generativeai as genai
+import os
+import pandas as pd
+import requests
+import numpy as np
+from bs4 import BeautifulSoup
+from sklearn.preprocessing import LabelEncoder
+import torch
+from sklearn.model_selection import train_test_split
+from torch.utils.data import Dataset, DataLoader
+from transformers import BertTokenizer, BertForSequenceClassification, AdamW, get_scheduler
+from sklearn.metrics import accuracy_score
+from tqdm import tqdm
+import shutil
+from google.colab import files
+import concurrent.futures
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO)
+
+# Constants
+CHUNK_SIZE = 256
+OVERLAP = 50
+MODEL_NAME = "bert-base-uncased"
+BATCH_SIZE = 8
+NUM_EPOCHS = 3
+LEARNING_RATE = 2e-5
+MAX_LENGTH = 512
 
 # Configure API key
 '''
@@ -82,7 +117,7 @@ def get_author_description(author_name):
     response = model.generate_content(f"Tell me about the author and book {author_name}")
     return response.text
 
-def make_guess():
+def make_ai_prediction():
     """
     Prompts the user for a filename, extracts named entities from the file,
     sends the entities to the AI model to guess the author and book name,
@@ -114,38 +149,6 @@ def make_guess():
     print(f"Tell me about the author and book: {description}")
     print ("--------------------------------------------")
 
-
-
-
-
-
-
-
-import os
-import pandas as pd
-import requests
-import numpy as np
-from bs4 import BeautifulSoup
-from sklearn.preprocessing import LabelEncoder
-import torch
-from sklearn.model_selection import train_test_split
-from torch.utils.data import Dataset, DataLoader
-from transformers import BertTokenizer, BertForSequenceClassification, AdamW, get_scheduler
-from sklearn.metrics import accuracy_score
-from tqdm import tqdm
-import shutil
-from google.colab import files
-import concurrent.futures
-
-# Constants
-CHUNK_SIZE = 256
-OVERLAP = 50
-MODEL_NAME = "bert-base-uncased"
-BATCH_SIZE = 8
-NUM_EPOCHS = 3
-LEARNING_RATE = 2e-5
-MAX_LENGTH = 512
-
 class AuthorshipDataset(Dataset):
     def __init__(self, texts, labels, tokenizer, max_length=MAX_LENGTH):
         self.texts = texts.tolist()
@@ -171,7 +174,6 @@ class AuthorshipDataset(Dataset):
             "attention_mask": encoding["attention_mask"].squeeze(0),
             "labels": self.labels[idx],
         }
-
 
 # only removes funny tokens for English texts
 def remove_funny_tokens(text):
@@ -441,8 +443,7 @@ def make_prediction(model, tokenizer, author_mapping, device, new_text):
     predicted_author = predict_author_with_loaded_model(model, tokenizer, new_text, author_mappings_reversed, device)
     return predicted_author
 
-# Function to make a prediction using the trained model
-def make_ml_prediction():
+def make_ml_prediction_after_training_model():
     # Load and preprocess data
     df_data = load_and_preprocess_data("gutenberg_metadata.csv")
 
@@ -471,11 +472,36 @@ def make_ml_prediction():
     predicted_author = make_prediction(model, tokenizer, author_mapping, device, new_text)
     print(f"Predicted author: {predicted_author}")
 
+# Function to make a prediction using the ml model
+def make_ml_prediction():
+
+    option = input("\n\nDo you have the pre-trained model?\n\nChoose an option:\nYES: Have the model_path ready (NOT AVAILABLE)\nNO: Wait for the model to train\n\nEnter YES or NO: ").strip().upper()
+    while True:
+        if option == 'YES':
+            model_path = input("Enter the path to the pre-trained model: ")
+            # Need to have author_mapping stored based on the trained model for this to work
+            # Get author_mapping from the model_path folder if it is stored there
+            # author_mapping.txt contains lines containg {id, author_name} in each line
+            author_mapping = {}
+            with open("author_mapping.txt", "r") as file:
+                for line in file:
+                    key, value = line.strip().split(", ")
+                    author_mapping[int(key)] = value
+            author_mappings_reversed = {value: key for key, value in author_mapping.items()}
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            predicted_author = predict_author_with_downloaded_model(model_path, author_mappings_reversed, device)
+            print(f"Predicted author: {predicted_author}")
+            break
+        elif option == 'NO':
+            make_ml_prediction_after_training_model()
+            break
+    
+
 def main():
     while True:
         option = input("\n\nAUTHORSHIP IDENTIFICATION SYSTEM\n\nChoose an option:\nA: Identify Author using Gemini AI\nB: Identify Author using pre-trained ML model on Famous Authors\n\nEnter A or B: ").strip().upper()
         if option == 'A':
-            make_guess()
+            make_ai_prediction()
             break
         elif option == 'B':
             make_ml_prediction()
