@@ -115,6 +115,26 @@ def make_guess():
     print(f"Tell me about the author and book: {description}")
     print ("--------------------------------------------")
 
-# Main program
+def make_prediction():
+    return "This function is not implemented yet."
 
-make_guess()
+
+#Generate the code to prompt for 2 options saying which implementation user wants to use- A or B
+#Option A calls make_guess() and option B calls make_prediction() function which I will implement later
+#And we take the input for options from the user when this python file is run
+def main():
+    while True:
+        option = input("Choose an option:\nA: Use make_guess()\nB: Use make_prediction()\nEnter A or B: ").strip().upper()
+        if option == 'A':
+            make_guess()
+            break
+        elif option == 'B':
+            make_prediction()
+            break
+        else:
+            print("Invalid option. Please enter A or B.")
+
+if __name__ == "__main__":
+    main()
+
+
