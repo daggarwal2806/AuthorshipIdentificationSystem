@@ -264,7 +264,6 @@ def parallel_process_data(df_author_link):
           author, combined_text = future.result()  # Get the result from each thread
           if author and combined_text:
               data['Author'].append(author)
-              print(author)
               data['Text'].append(combined_text)
 
 
@@ -464,7 +463,7 @@ def make_ml_prediction_after_training_model():
     save_model(model, tokenizer, save_path)
 
     # Prediction
-    new_text = "Your new text here"
+    new_text = input("\nEnter Mystery Text: ")
     predicted_author = make_prediction(model, tokenizer, author_mapping, device, new_text)
     print(f"\nPredicted author: {predicted_author}")
 
@@ -473,8 +472,8 @@ def make_ml_prediction():
     while True:
         print("\n\nDo you have a pre-trained model?\n")
         print("Choose an option:")
-        print("YES: Have the model_path ready (NOT AVAILABLE)")
-        print("NO: Wait for the model to train")
+        print("YES: Have the model_path ready (MIGHT NOT BE AVAILABLE WITH PROGRAM)")
+        print("NO: Wait for the model to train (WILL REQUIRE TIME AND GPUs)")
         option = input("\nEnter YES or NO: ").strip().upper()
         if option == 'YES':
             model_path = input("\nEnter the path to the pre-trained model: ")
@@ -491,6 +490,10 @@ def make_ml_prediction():
             print(f"\nPredicted author: {predicted_author}")
             break
         elif option == 'NO':
+            print("\n\nTHE PROGRAM WILL FIRST PREPARE THE DATASET!")
+            print("THE MODEL WILL BE TRAINED ON A DATASET ")
+            print("CONTAINING AUTHORS WITH 5 OR MORE BOOKS IN THE CORPUS ")
+            print("WHICH IS STILL A LOT OF DATA!\n\n")
             make_ml_prediction_after_training_model()
             break
         else:
