@@ -257,7 +257,7 @@ def parallel_process_data(df_author_link):
   with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
       futures = []
       for key, row in df_author_link.iterrows():
-          futures.append(executor.submit(process_author, row))
+          futures.append(executor.submit(process_links, row))
 
       data = {'Author': [], 'Text': []}
       for future in concurrent.futures.as_completed(futures):
